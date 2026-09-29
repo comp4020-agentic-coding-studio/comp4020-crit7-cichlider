@@ -7,7 +7,7 @@ body {
 }
 
 main {
-  max-width: 40rem;
+  max-width: 44rem;
   margin: 0 auto;
 }
 
@@ -15,26 +15,103 @@ a {
   color: #0b5fff;
 }
 
-form {
+nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  margin-block: 1.5rem;
+  gap: 1rem;
+  max-width: 44rem;
+  margin: 0 auto 1rem;
 }
 
-input {
-  flex: 1;
-  min-width: 12rem;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-block: 1.5rem;
+  max-width: 32rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+label {
+  font-weight: 600;
+}
+
+input,
+select,
+textarea {
   padding: 0.4rem 0.6rem;
   font: inherit;
+  border: 1px solid #999;
+  border-radius: 0.3rem;
 }
 
 button {
-  padding: 0.4rem 1rem;
+  align-self: flex-start;
+  padding: 0.5rem 1.2rem;
   font: inherit;
+  border: 1px solid #0b5fff;
+  background: #0b5fff;
+  color: #fff;
+  border-radius: 0.3rem;
+  cursor: pointer;
 }
 
-#messages {
-  padding-inline-start: 1.2rem;
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-block: 1rem;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.checklist {
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+.checklist li {
+  padding: 0.4rem 0.6rem;
+  margin-block-end: 0.3rem;
+  border-radius: 0.3rem;
+  border-inline-start: 0.3rem solid #999;
+}
+
+.status-done {
+  border-inline-start-color: #1a7f37;
+  background: #eafbf0;
+}
+
+.status-in-progress {
+  border-inline-start-color: #9a6700;
+  background: #fff8e6;
+}
+
+.status-missing {
+  border-inline-start-color: #b91c1c;
+  background: #fdecec;
+}
+
+.category {
+  border: 1px solid #ddd;
+  border-radius: 0.4rem;
+  padding: 0.75rem 1rem;
+  margin-block-end: 0.75rem;
+}
+
+.warnings {
+  border: 1px solid #9a6700;
+  background: #fff8e6;
+  border-radius: 0.4rem;
+  padding: 0.75rem 1rem;
+  margin-block: 1rem;
 }

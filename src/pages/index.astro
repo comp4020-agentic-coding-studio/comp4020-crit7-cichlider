@@ -1,8 +1,9 @@
 ---
-import { listMessages } from "../lib/db";
+import { listPlans } from "../lib/db";
+import { MAJORS } from "../lib/majors";
 import "../styles.css";
 
-const messages = listMessages();
+const plans = listPlans();
 ---
 
 <!doctype html>
@@ -10,44 +11,65 @@ const messages = listMessages();
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>COMP4020 prototype</title>
+    <title>ANU course planner</title>
   </head>
   <body>
     <nav aria-label="site">
-      <a href="/">Guestbook</a>
+      <a href="/">Course planner</a>
       <a href="/readme/">About</a>
     </nav>
     <main>
-      <h1>Guestbook</h1>
+      <h1>What should I take next?</h1>
       <p>
-        A minimal full-stack starter: messages live in SQLite on the machine's
-        volume (state survives a reload and a redeploy), and new messages
-        appear in every open tab over a server-sent-events stream — open this
-        page twice and sign it in one. Replace all of this with your own
-        prototype.
+        Pick a Computing major, list what you've already completed and what
+        you're taking right now, and get back which of the major's own
+        requirements are still open — and a suggested order to clear them in,
+        packed into 24-unit semesters. This is a slice of ANU's course
+        selection, not the whole enrolment system: see
+        <a href="/readme/">the about page</a> for exactly what it does and doesn't
+        model.
       </p>
-      <form method="post" action="/api/messages">
-        <label for="body">Leave a message</label>
-        <input id="body" name="body" required maxlength="500" />
-        <button>Sign</button>
+
+      <form method="post" action="/api/plans">
+        <div class="field">
+          <label for="majorCode">Major</label>
+          <select id="majorCode" name="majorCode" required>
+            {MAJORS.map((m) => <option value={m.code}>{m.name}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="completed">Completed courses</label>
+          <textarea
+            id="completed"
+            name="completed"
+            rows="3"
+            placeholder="COMP1100, COMP1110, MATH1005, COMP1600"></textarea>
+        </div>
+        <div class="field">
+          <label for="inProgress">Currently taking</label>
+          <textarea id="inProgress" name="inProgress" rows="2" placeholder="COMP2100, COMP2400"
+          ></textarea>
+        </div>
+        <button>Recommend my schedule</button>
       </form>
-      <ul id="messages">
-        {messages.map((message) => <li>{message.body}</li>)}
-      </ul>
+
+      <h2>Saved plans</h2>
+      {
+        plans.length === 0 ? (
+          <p>No plans yet — build one above.</p>
+        ) : (
+          <ul id="plans">
+            {plans.map((plan) => (
+              <li>
+                <a href={`/plans/${plan.id}`}>
+                  {MAJORS.find((m) => m.code === plan.majorCode)?.name ?? plan.majorCode}
+                </a>{" "}
+                — saved {plan.createdAt}
+              </li>
+            ))}
+          </ul>
+        )
+      }
     </main>
-    <script>
-      // The live half of the demo: subscribe to the SSE stream and prepend
-      // messages as they arrive. The form itself needs none of this — its
-      // POST + redirect re-renders the submitting tab from SQLite; this
-      // stream is how every other tab finds out.
-      const list = document.querySelector("#messages");
-      const source = new EventSource("/api/events");
-      source.addEventListener("message", (event) => {
-        const message = JSON.parse(event.data);
-        const item = document.createElement("li");
-        item.textContent = message.body;
-        list?.prepend(item);
-      });
-    </script>
   </body>
 </html>

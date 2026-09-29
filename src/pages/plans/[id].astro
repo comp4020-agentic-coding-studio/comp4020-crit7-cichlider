@@ -1,0 +1,167 @@
+---
+import { getPlan } from "../../lib/db";
+import { findMajor } from "../../lib/majors";
+import { recommend } from "../../lib/planner";
+import "../../styles.css";
+
+const id = Number(Astro.params.id);
+const plan = Number.isFinite(id) ? getPlan(id) : undefined;
+if (!plan) {
+  return new Response("No plan with that id.", { status: 404 });
+}
+const major = findMajor(plan.majorCode);
+if (!major) {
+  return new Response("Unknown major on this plan.", { status: 404 });
+}
+
+const completed: string[] = JSON.parse(plan.completed);
+const inProgress: string[] = JSON.parse(plan.inProgress);
+const result = recommend(major, completed, inProgress);
+
+const statusLabel = { done: "done", "in-progress": "in progress", missing: "still needed" } as const;
+---
+
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{major.name} plan — ANU course planner</title>
+  </head>
+  <body>
+    <nav aria-label="site">
+      <a href="/">Course planner</a>
+      <a href="/readme/">About</a>
+    </nav>
+    <main>
+      <h1>{major.name}</h1>
+      <p>
+        Plan #{plan.id}, saved {plan.createdAt}. Completed: {completed.length ? completed.join(", ") : "none entered"}.
+        In progress: {inProgress.length ? inProgress.join(", ") : "none entered"}.
+        Official requirements: <a href={major.sourceUrl}>{major.sourceUrl}</a> ({major.totalUnits} units total
+        {major.levelLimits?.max1000 !== undefined && <>, max {major.levelLimits.max1000} units at 1000-level</>}
+        {major.levelLimits?.min3000Plus !== undefined && <>, min {major.levelLimits.min3000Plus} units at 3000+-level</>}).
+      </p>
+
+      {
+        result.warnings.length > 0 && (
+          <div class="warnings">
+            <strong>Assumptions to check:</strong>
+            <ul>
+              {result.warnings.map((w) => <li>{w}</li>)}
+            </ul>
+          </div>
+        )
+      }
+
+      <h2>Foundational courses</h2>
+      <ul class="checklist">
+        {result.foundational.map((row) => (
+          <li class={`status-${row.status}`}>
+            <strong>{statusLabel[row.status]}</strong> — {row.label}
+            {row.status !== "done" && row.options.length > 1 && (
+              <> (any one of: {row.options.map((o) => o.code).join(", ")})</>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2>Compulsory courses</h2>
+      <ul class="checklist">
+        {result.compulsory.map((row) => (
+          <li class={`status-${row.status}`}>
+            <strong>{statusLabel[row.status]}</strong> — {row.label}
+            {row.status !== "done" && row.options.length > 1 && (
+              <> (any one of: {row.options.map((o) => o.code).join(", ")})</>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2>Elective categories</h2>
+      {
+        result.categories.map((cat) => (
+          <div class="category">
+            <h3>
+              {cat.category.label} ({cat.category.minUnits}
+              {cat.category.maxUnits !== cat.category.minUnits ? `–${cat.category.maxUnits}` : ""} units)
+            </h3>
+            <p>
+              {cat.doneUnits} units done, {cat.inProgressUnits} units in progress
+              {cat.stillNeeded > 0 ? <>, <strong>{cat.stillNeeded} units still needed</strong></> : <> — requirement met</>}.
+            </p>
+            {cat.countedCourses.length > 0 && (
+              <p>
+                Counting: {cat.countedCourses.map((c) => `${c.code} (${statusLabel[c.status]})`).join(", ")}
+              </p>
+            )}
+          </div>
+        ))
+      }
+
+      {
+        result.levelCheck && (
+          <>
+            <h2>Level distribution</h2>
+            <ul class="checklist">
+              {result.levelCheck.max1000 && (
+                <li class={result.levelCheck.max1000.ok ? "status-done" : "status-missing"}>
+                  1000-level units counted towards the major: {result.levelCheck.max1000.actual} / max{" "}
+                  {result.levelCheck.max1000.limit}
+                </li>
+              )}
+              {result.levelCheck.min3000Plus && (
+                <li class={result.levelCheck.min3000Plus.ok ? "status-done" : "status-missing"}>
+                  3000+-level units: {result.levelCheck.min3000Plus.actual} / min {result.levelCheck.min3000Plus.limit}
+                </li>
+              )}
+            </ul>
+          </>
+        )
+      }
+
+      <h2>Suggested schedule</h2>
+      {
+        result.schedule.length === 0 ? (
+          <p>Nothing left — this plan already satisfies every requirement this tool checks.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Semester</th>
+                <th scope="col">Courses</th>
+                <th scope="col">Units</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.schedule.map((sem) => (
+                <tr>
+                  <td>{sem.semester}</td>
+                  <td>
+                    <ul>
+                      {sem.items.map((item) => (
+                        <li>
+                          {item.code ? `${item.code} — ` : ""}
+                          {item.label} ({item.units} units)
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td>{sem.units}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      }
+      <p>
+        <strong>{result.totalMajorUnitsRemaining}</strong> major units remaining across{" "}
+        {result.schedule.length} semester{result.schedule.length === 1 ? "" : "s"}. This counts only{" "}
+        {major.name}'s own {major.totalUnits} units — a full Bachelor of Computing degree also needs general
+        electives and, for a double major, a second major's units, which this tool doesn't plan for.
+      </p>
+
+      <p><a href="/">← build another plan</a></p>
+    </main>
+  </body>
+</html>
