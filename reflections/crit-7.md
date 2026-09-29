@@ -1,31 +1,32 @@
-DRAFT — rewrite this in your own voice before submitting. See note below.
-
 ## What was the breakthrough?
 
-The breakthrough wasn't technical, it was scope. My first instinct was to
-try to model the whole Bachelor of Computing — every major, a full
-prerequisite graph, the general electives, the lot — because that's what
-"course selection" sounds like it should mean. The actual unlock was
-realising the brief was asking for the opposite: a slice, honestly bounded,
-beats a whole system that's secretly held together with invented data. Once
-I picked one major's 48 units and said out loud what I wasn't modelling
-(live prerequisites, the full degree, ANU's live catalogue), the rest of the
-build got much easier to reason about, because every decision had a clear
-"does this belong in the slice or not" test.
+The breakthrough wasn't something the agent found — it was me noticing it.
+The recommendation engine worked: correct requirement checking, correct
+elective-category math, correct unit totals. But the first version of the
+"Suggested schedule" — the actual output someone would use to decide what to
+enrol in next semester — was a flat table with a bullet list crammed into
+each cell. Technically correct, genuinely useless. Nobody plans their
+courses off a bullet list; a real degree plan is a grid you can scan by
+year and semester, where you can tell compulsory from elective at a glance.
 
-The other half of it was the real-data decision. It would have been faster
-to invent plausible-looking requirement numbers. Fetching four actual major
-pages and then explicitly flagging the places where the page itself doesn't
-state something (prerequisites, mostly) took longer, but it's the difference
-between a tool that's useful and one that just looks like it is.
+I could have let that slide, because the tests passed and the numbers were
+right. The unlock was refusing to treat "the logic is correct" as the same
+thing as "this is done." I called it what it was — the UI was bad, not
+just a little rough — and pushed for it to actually look like the thing it
+was replacing (ANU's own study plan), not a placeholder.
 
 ## What did this change about how I want to work as a developer?
 
-I want to default to saying what a system doesn't do, not just what it
-does. A README that lists its own gaps is more trustworthy than one that
-only lists features, and that trust is worth more than the extra polish of
-hiding the gaps. I also want to keep treating "confirm before reusing
-someone else's (or my own past) work" as a real step and not a formality —
-checking whether last week's harness actually applied here, instead of
-merging it on autopilot, is the same instinct as flagging inferred data
-instead of presenting it as fact.
+The first time I flagged this, I said "the UI is too ugly" and left it
+there — too vague to act on precisely, so the first fix (matching ANU's
+visual style) was right but incomplete: the schedule itself was still a
+text list, just a prettier one. It only actually got fixed once I said
+exactly what "ugly" meant: organise by year/semester, one course per cell,
+visually distinguish compulsory from elective, make it a real grid, not a
+report. Vague feedback gets a vague fix; specific feedback gets the actual
+problem solved.
+
+Going forward I want to default to naming problems that precisely, for
+myself as much as for an agent — "this doesn't work" or "this is bad" is a
+feeling, not a spec, and the gap between them is exactly the gap between a
+plausible-looking fix and the right one.
