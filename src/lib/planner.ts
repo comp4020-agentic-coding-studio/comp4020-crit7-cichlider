@@ -97,7 +97,8 @@ function checkCategory(
   return { category, doneUnits, inProgressUnits, countedCourses, stillNeeded, remainingSlots };
 }
 
-export type ScheduleItem = { label: string; code?: string; units: number };
+export type ScheduleItemKind = "foundational" | "compulsory" | "elective" | "unspecified";
+export type ScheduleItem = { title: string; code?: string; units: number; kind: ScheduleItemKind };
 export type PlanResult = {
   major: Major;
   foundational: RequirementRow[];
@@ -107,7 +108,7 @@ export type PlanResult = {
     max1000?: { limit: number; actual: number; ok: boolean };
     min3000Plus?: { limit: number; actual: number; ok: boolean };
   };
-  schedule: { semester: number; items: ScheduleItem[]; units: number }[];
+  schedule: { semester: number; year: number; semesterInYear: 1 | 2; items: ScheduleItem[]; units: number }[];
   totalMajorUnitsRemaining: number;
   warnings: string[];
 };
@@ -171,22 +172,29 @@ export function recommend(major: Major, completedRaw: string[], inProgressRaw: s
   // major's min-3000 rule is the one students most often miss.
   const queue: ScheduleItem[] = [];
   for (const row of foundational) {
-    if (row.status === "missing") queue.push({ label: row.label, units: row.options[0]?.units ?? 6 });
+    if (row.status === "missing") {
+      const pick = row.options[0];
+      queue.push({ title: pick?.title ?? row.label, code: pick?.code, units: pick?.units ?? 6, kind: "foundational" });
+    }
   }
   for (const row of compulsory) {
     if (row.status === "missing") {
       const pick = row.options[0];
-      queue.push({ label: row.label, code: pick?.code, units: pick?.units ?? 6 });
+      queue.push({ title: pick?.title ?? row.label, code: pick?.code, units: pick?.units ?? 6, kind: "compulsory" });
     }
   }
   const sortedCategories = [...categories].sort((a, b) => (b.category.levelFallback ?? 0) - (a.category.levelFallback ?? 0));
   for (const cat of sortedCategories) {
     for (const course of cat.remainingSlots) {
-      queue.push({ label: `${cat.category.label}: ${course.title}`, code: course.code, units: course.units });
+      queue.push({ title: course.title, code: course.code, units: course.units, kind: "elective" });
     }
     const coveredByPool = cat.remainingSlots.reduce((sum, c) => sum + c.units, 0);
     if (coveredByPool < cat.stillNeeded) {
-      queue.push({ label: `${cat.category.label}: unspecified elective`, units: cat.stillNeeded - coveredByPool });
+      queue.push({
+        title: `${cat.category.label}: unspecified elective`,
+        units: cat.stillNeeded - coveredByPool,
+        kind: "unspecified",
+      });
       warnings.push(
         `${major.name}: ${cat.category.label} still needs ${cat.stillNeeded - coveredByPool} units beyond the example pool — check the major page for the full list.`,
       );
@@ -196,16 +204,26 @@ export function recommend(major: Major, completedRaw: string[], inProgressRaw: s
   const schedule: PlanResult["schedule"] = [];
   let current: ScheduleItem[] = [];
   let currentUnits = 0;
+  const pushSemester = () => {
+    const semester = schedule.length + 1;
+    schedule.push({
+      semester,
+      year: Math.floor((semester - 1) / 2) + 1,
+      semesterInYear: ((semester - 1) % 2 === 0 ? 1 : 2) as 1 | 2,
+      items: current,
+      units: currentUnits,
+    });
+  };
   for (const item of queue) {
     if (currentUnits + item.units > SEMESTER_UNITS && current.length > 0) {
-      schedule.push({ semester: schedule.length + 1, items: current, units: currentUnits });
+      pushSemester();
       current = [];
       currentUnits = 0;
     }
     current.push(item);
     currentUnits += item.units;
   }
-  if (current.length > 0) schedule.push({ semester: schedule.length + 1, items: current, units: currentUnits });
+  if (current.length > 0) pushSemester();
 
   const totalMajorUnitsRemaining = queue.reduce((sum, i) => sum + i.units, 0);
 

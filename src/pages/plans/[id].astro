@@ -19,6 +19,12 @@ const inProgress: string[] = JSON.parse(plan.inProgress);
 const result = recommend(major, completed, inProgress);
 
 const statusLabel = { done: "done", "in-progress": "in progress", missing: "still needed" } as const;
+
+type Semester = (typeof result.schedule)[number];
+const years: Semester[][] = [];
+for (const sem of result.schedule) {
+  (years[sem.year - 1] ??= []).push(sem);
+}
 ---
 
 <!doctype html>
@@ -131,33 +137,39 @@ const statusLabel = { done: "done", "in-progress": "in progress", missing: "stil
         result.schedule.length === 0 ? (
           <p>Nothing left — this plan already satisfies every requirement this tool checks.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Semester</th>
-                <th scope="col">Courses</th>
-                <th scope="col">Units</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.schedule.map((sem) => (
-                <tr>
-                  <td>{sem.semester}</td>
-                  <td>
-                    <ul>
-                      {sem.items.map((item) => (
-                        <li>
-                          {item.code ? `${item.code} — ` : ""}
-                          {item.label} ({item.units} units)
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                  <td>{sem.units}</td>
-                </tr>
+          <>
+            <ul class="plan-legend">
+              <li class="plan-legend-item"><span class="swatch swatch--foundational" /> Foundational</li>
+              <li class="plan-legend-item"><span class="swatch swatch--compulsory" /> Compulsory</li>
+              <li class="plan-legend-item"><span class="swatch swatch--elective" /> Computing elective</li>
+              <li class="plan-legend-item"><span class="swatch swatch--unspecified" /> Unspecified elective</li>
+            </ul>
+            <div class="plan-grid">
+              {years.map((semesters) => (
+                <div class="plan-year">
+                  <h3 class="plan-year-label">Year {semesters[0].year}</h3>
+                  <div class="plan-semesters">
+                    {semesters.map((sem) => (
+                      <div class="plan-semester">
+                        <h4 class="plan-semester-label">
+                          Semester {sem.semesterInYear} <span class="plan-semester-units">({sem.units} units)</span>
+                        </h4>
+                        <div class="plan-courses">
+                          {sem.items.map((item) => (
+                            <div class={`course-box course-box--${item.kind}`}>
+                              {item.code && <span class="course-code">{item.code}</span>}
+                              <span class="course-title">{item.title}</span>
+                              <span class="course-units">{item.units} units</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )
       }
       <p>

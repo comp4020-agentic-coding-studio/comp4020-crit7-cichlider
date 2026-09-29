@@ -279,6 +279,140 @@ th {
   color: var(--secondary);
 }
 
+/* Suggested schedule: a real degree-planner grid — Year groups, each with
+   its semesters as columns, each course its own box — not a bullet list. */
+.plan-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  list-style: none;
+  padding-inline-start: 0;
+  margin-block: var(--spacing-md);
+  font-size: 0.875rem;
+}
+
+.plan-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.2rem;
+}
+
+.swatch--foundational {
+  background: var(--primary);
+}
+
+.swatch--compulsory {
+  background: var(--tertiary);
+}
+
+.swatch--elective {
+  background: var(--secondary);
+}
+
+.swatch--unspecified {
+  background: var(--warning);
+}
+
+.plan-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  margin-block: var(--spacing-lg);
+}
+
+.plan-year-label {
+  margin-block-end: var(--spacing-sm);
+  padding-block-end: var(--spacing-xs);
+  border-block-end: 2px solid var(--border);
+}
+
+.plan-semesters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 40rem) {
+  .plan-semesters {
+    grid-template-columns: 1fr;
+  }
+}
+
+.plan-semester {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+  padding: var(--spacing-md);
+}
+
+.plan-semester-label {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.plan-semester-units {
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 60%, transparent);
+  font-size: 0.8125rem;
+}
+
+.plan-courses {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.course-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-inline-start: 0.25rem solid var(--border);
+  border-radius: var(--radius);
+}
+
+.course-box--foundational {
+  border-inline-start-color: var(--primary);
+}
+
+.course-box--compulsory {
+  border-inline-start-color: var(--tertiary);
+}
+
+.course-box--elective {
+  border-inline-start-color: var(--secondary);
+}
+
+.course-box--unspecified {
+  border-inline-start-color: var(--warning);
+}
+
+.course-code {
+  font-family: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.course-title {
+  font-size: 0.9375rem;
+}
+
+.course-units {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--text) 60%, transparent);
+}
+
 #plans {
   list-style: none;
   padding-inline-start: 0;
